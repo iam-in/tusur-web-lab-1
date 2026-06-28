@@ -1,0 +1,7 @@
+﻿language: python
+python:
+  - "3.12"
+install:
+  - pip install -r lab1/requirements.txt
+script:
+  - pytest lab1/tests

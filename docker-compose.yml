@@ -1,0 +1,14 @@
+﻿services:
+  pdf-extract:
+    build:
+      context: ./tools/pdf-extract
+    volumes:
+      - .:/workspace
+
+  lab1-web:
+    build:
+      context: ./lab1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./lab1/app/static/uploads:/app/app/static/uploads
