@@ -10,7 +10,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 CHANNEL_INDEX = {"r": 0, "g": 1, "b": 2}
 VALID_ORDERS = {"rgb", "rbg", "grb", "gbr", "brg", "bgr"}
@@ -24,6 +24,7 @@ class ProcessingResult:
     vertical_profile: str
     horizontal_profile: str
     order: str
+    timestamp_text: str
 
 
 def is_allowed_filename(filename: str, allowed_extensions: set[str]) -> bool:
@@ -40,6 +41,27 @@ def reorder_rgb_channels(image: Image.Image, order: str) -> Image.Image:
     indexes = [CHANNEL_INDEX[channel] for channel in normalized_order]
     changed = data[:, :, indexes]
     return Image.fromarray(changed.astype(np.uint8), mode="RGB")
+
+
+def add_timestamp_overlay(image: Image.Image, timestamp_text: str) -> Image.Image:
+    if not timestamp_text:
+        return image
+
+    output = image.copy()
+    draw = ImageDraw.Draw(output)
+    font = ImageFont.load_default()
+    padding = max(12, min(output.size) // 35)
+    bbox = draw.textbbox((0, 0), timestamp_text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    x = padding
+    y = output.height - text_height - padding
+    draw.rectangle(
+        (x - 8, y - 8, x + text_width + 8, y + text_height + 8),
+        fill=(0, 0, 0),
+    )
+    draw.text((x, y), timestamp_text, fill=(255, 255, 255), font=font)
+    return output
 
 
 def save_color_histogram(image: Image.Image, target: Path) -> None:
@@ -93,13 +115,15 @@ def save_mean_profile(image: Image.Image, target: Path, axis: str) -> None:
     plt.close(fig)
 
 
-def process_image(source: Path, result_dir: Path, order: str) -> ProcessingResult:
+def process_image(source: Path, result_dir: Path, order: str, timestamp_text: str = "") -> ProcessingResult:
     result_dir.mkdir(parents=True, exist_ok=True)
     run_id = uuid4().hex
+    normalized_timestamp = timestamp_text.strip()
 
     with Image.open(source) as image:
         original = image.convert("RGB")
         processed = reorder_rgb_channels(original, order)
+        processed = add_timestamp_overlay(processed, normalized_timestamp)
 
         original_path = result_dir / f"{run_id}_original.png"
         processed_path = result_dir / f"{run_id}_processed_{order}.png"
@@ -120,6 +144,7 @@ def process_image(source: Path, result_dir: Path, order: str) -> ProcessingResul
         vertical_profile=_relative_static_path(vertical_path),
         horizontal_profile=_relative_static_path(horizontal_path),
         order=order,
+        timestamp_text=normalized_timestamp,
     )
 
 

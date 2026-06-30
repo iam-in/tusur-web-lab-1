@@ -182,3 +182,38 @@ button:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.result-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.result-heading h2 {
+    margin: 0;
+}
+
+.time-badge {
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid rgba(47, 111, 237, 0.28);
+    border-radius: 8px;
+    background: rgba(47, 111, 237, 0.08);
+    color: var(--accent-dark);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+    .result-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .time-badge {
+        white-space: normal;
+    }
+}

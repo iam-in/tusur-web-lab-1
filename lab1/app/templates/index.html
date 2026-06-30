@@ -41,6 +41,11 @@
                     </select>
                 </label>
 
+                <label class="field">
+                    <span>Время для нанесения на изображение</span>
+                    <input type="text" name="timestamp_text" maxlength="64" value="{{ suggested_timestamp }}" placeholder="30.06.2026 12:00:00">
+                </label>
+
                 <label class="field captcha-row">
                     <span>CAPTCHA: {{ captcha_question }}</span>
                     <input type="number" name="captcha" inputmode="numeric" required>
@@ -54,6 +59,8 @@
                 <ul>
                     <li>принимает изображение пользователя;</li>
                     <li>переставляет RGB-каналы в выбранном порядке;</li>
+                    <li>наносит заданное пользователем время на результат;</li>
+                    <li>показывает это же время рядом с обработанной картинкой;</li>
                     <li>строит распределение цветов исходного изображения;</li>
                     <li>строит средние значения цвета по вертикали и горизонтали;</li>
                     <li>проверяет ввод через простую CAPTCHA.</li>
@@ -68,7 +75,12 @@
                     <img src="{{ url_for('static', filename=result.original_image) }}" alt="Исходное изображение">
                 </article>
                 <article class="media-panel wide">
-                    <h2>Результат: {{ result.order.upper() }}</h2>
+                    <div class="result-heading">
+                        <h2>Результат: {{ result.order.upper() }}</h2>
+                        {% if result.timestamp_text %}
+                            <p class="time-badge">Время: {{ result.timestamp_text }}</p>
+                        {% endif %}
+                    </div>
                     <img src="{{ url_for('static', filename=result.processed_image) }}" alt="Изображение после перестановки RGB-каналов">
                 </article>
                 <article class="media-panel">

@@ -17,13 +17,13 @@ def test_reorder_rgb_channels_changes_to_bgr():
 
 def test_process_image_creates_all_expected_files(tmp_path: Path):
     source = tmp_path / "source.png"
-    data = np.zeros((8, 10, 3), dtype=np.uint8)
+    data = np.zeros((80, 120, 3), dtype=np.uint8)
     data[:, :, 0] = 220
     data[:, :, 1] = 120
     data[:, :, 2] = 40
     Image.fromarray(data, mode="RGB").save(source)
 
-    result = process_image(source, tmp_path / "results", "grb")
+    result = process_image(source, tmp_path / "results", "grb", "30.06.2026 12:00:00")
 
     generated = [
         result.original_image,
@@ -33,7 +33,11 @@ def test_process_image_creates_all_expected_files(tmp_path: Path):
         result.horizontal_profile,
     ]
     assert result.order == "grb"
+    assert result.timestamp_text == "30.06.2026 12:00:00"
     assert all((tmp_path / "results" / Path(name).name).exists() for name in generated)
+
+    processed = Image.open(tmp_path / "results" / Path(result.processed_image).name)
+    assert processed.getbbox() is not None
 
 
 def test_health_endpoint_returns_ok():

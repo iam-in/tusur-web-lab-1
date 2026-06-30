@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 import random
-from pathlib import Path
+from datetime import datetime
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
@@ -29,12 +29,14 @@ def create_app() -> Flask:
             orders=sorted(VALID_ORDERS),
             selected_order="bgr",
             captcha_question=captcha_question,
+            suggested_timestamp=_default_timestamp(),
         )
 
     @app.post("/process")
     def process():
         order = request.form.get("order", "bgr").lower()
         captcha_answer = request.form.get("captcha", "").strip()
+        timestamp_text = request.form.get("timestamp_text", "").strip()[:64]
 
         if captcha_answer != str(session.get("captcha_answer")):
             flash("Проверка не пройдена: решите пример CAPTCHA.", "error")
@@ -57,7 +59,7 @@ def create_app() -> Flask:
         source = UPLOAD_DIR / filename
         uploaded.save(source)
 
-        result = process_image(source, RESULT_DIR, order)
+        result = process_image(source, RESULT_DIR, order, timestamp_text)
         captcha_question = _refresh_captcha()
         flash("Изображение обработано успешно.", "success")
         return render_template(
@@ -66,6 +68,7 @@ def create_app() -> Flask:
             orders=sorted(VALID_ORDERS),
             selected_order=order,
             captcha_question=captcha_question,
+            suggested_timestamp=timestamp_text or _default_timestamp(),
         )
 
     @app.get("/health")
@@ -73,6 +76,10 @@ def create_app() -> Flask:
         return {"status": "ok"}
 
     return app
+
+
+def _default_timestamp() -> str:
+    return datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
 
 def _refresh_captcha() -> str:
